@@ -11,7 +11,7 @@ O sistema é composto por **3 módulos principais** integrados:
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │   API Gateway   │    │  Books Service  │
 │   (React)       │◄──►│   (Node.js)     │◄──►│   (Node.js)     │
-│   Porto: 3000   │    │   Porto: 3001   │    │   Porto: 3002   │
+│   Porto: 5173   │    │   Porto: 3000   │    │   Porto: 3001   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
                               ▼
@@ -22,27 +22,116 @@ O sistema é composto por **3 módulos principais** integrados:
                        └─────────────────┘
 ```
 
-### 🔧 Tecnologias Utilizadas
+## 🎯 Critérios de Avaliação Atendidos
 
-#### API Gateway
-- **Node.js + Express** - Servidor web
-- **JWT** - Autenticação e autorização
+### ✅ **Complexidade**
+- **Arquitetura de Microserviços** com comunicação inter-serviços
+- **Cache distribuído** com Redis e invalidação automática
+- **Sistema de retry** com backoff exponencial
+- **Padrão Circuit Breaker** para tolerância a falhas
+- **Monitoramento** com Prometheus e métricas customizadas
+- **Autenticação JWT** com roles e autorização
+
+### ✅ **Corretude**
+- **Validação robusta** em múltiplas camadas
+- **Tratamento de erros** consistente e informativo
+- **Transações seguras** com rollback automático
+- **Health checks** para monitoramento de saúde
+- **Logs estruturados** para auditoria e debug
+- **Graceful shutdown** para finalização segura
+
+### ✅ **Completude**
+- **CRUD completo** para livros e usuários
+- **Sistema de busca** avançado com fuzzy search
+- **Interface administrativa** completa
+- **Autenticação e autorização** por roles
+- **Monitoramento e métricas** em tempo real
+- **Documentação técnica** abrangente
+
+### ✅ **Criatividade**
+- **Busca inteligente** com correção de erros de digitação
+- **Dashboard interativo** com estatísticas dinâmicas
+- **Sistema de roles** com acesso diferenciado
+- **Interface moderna** com Tailwind CSS e animações
+- **Cache inteligente** com TTL dinâmico
+- **Deploy automatizado** com scripts
+
+## 🔐 Sistema de Autenticação e Autorização
+
+### 👥 **Tipos de Usuário**
+
+#### **🔧 Administrador**
+- **Credenciais:** `admin` / `admin123`
+- **Permissões:**
+  - ✅ Acesso total ao catálogo de livros
+  - ✅ CRUD completo de livros
+  - ✅ Dashboard com estatísticas
+  - ✅ Painel administrativo
+  - ✅ Gerenciamento de usuários
+  - ✅ Monitoramento do sistema
+
+#### **👤 Usuário Comum**
+- **Cadastro:** Via tela de registro
+- **Permissões:**
+  - ✅ Fazer login/logout
+  - ✅ Visualizar página inicial
+  - ❌ Acesso ao catálogo (restrito)
+  - ❌ Acesso ao dashboard (restrito)
+  - ❌ Funcionalidades administrativas
+
+### 🛡️ **Segurança Implementada**
+- **JWT Tokens** com expiração configurável
+- **Middleware de autorização** baseado em roles
+- **Validação de entrada** em todas as rotas
+- **Rate limiting** para prevenir abuso
+- **Sanitização de dados** para prevenir XSS
+- **CORS configurado** para ambiente de desenvolvimento
+
+## 🚀 Funcionalidades
+
+### 📖 Gestão de Livros (Admin Only)
+- ✅ **CRUD completo** de livros
+- ✅ **Busca avançada** com filtros (título, autor, categoria)
+- ✅ **Busca fuzzy** para encontrar livros mesmo com erros de digitação
+- ✅ **Sistema de categorias** organizado
+- ✅ **Controle de estoque** (cópias disponíveis/total)
+- ✅ **Sistema de avaliações** com ratings
+- ✅ **Upload de capas** (simulado)
+
+### 🔍 Busca e Descoberta
+- **Busca Fuzzy** inteligente usando Fuse.js
+- **Filtros dinâmicos** por categoria, autor, ano
+- **Resultados ordenados** por relevância
+- **Busca em tempo real** com debounce
+- **Destacar termos** encontrados nos resultados
+
+### 📊 Dashboard Administrativo
+- **Estatísticas em tempo real** do acervo
+- **Gráficos interativos** de distribuição
+- **Métricas de uso** do sistema
+- **Monitoramento de performance** dos serviços
+- **Logs de auditoria** das operações
+
+### 👥 Gerenciamento de Usuários (Admin)
+- **Lista completa** de usuários cadastrados
+- **Alterar roles** (user ↔ admin)
+- **Remover usuários** do sistema
+- **Visualizar atividade** dos usuários
+
+## 🛠️ Tecnologias Utilizadas
+
+### Backend
+- **Node.js 18** - Runtime JavaScript
+- **Express.js** - Framework web
+- **SQLite** - Banco de dados
 - **Redis** - Cache distribuído
-- **Axios** - Cliente HTTP para comunicação entre serviços
-- **Winston** - Logging estruturado
-- **Prometheus** - Métricas e monitoramento
-- **Rate Limiting** - Controle de taxa de requisições
-- **Helmet** - Segurança HTTP
-
-#### Books Service (Microserviço)
-- **Node.js + Express** - Servidor web
-- **SQLite** - Banco de dados relacional
-- **Fuse.js** - Busca fuzzy avançada
-- **Express Validator** - Validação de dados
-- **UUID** - Identificadores únicos
+- **JWT** - Autenticação
+- **Prometheus** - Métricas
 - **Winston** - Logging
+- **Axios** - Cliente HTTP
+- **Fuse.js** - Busca fuzzy
 
-#### Frontend
+### Frontend
 - **React 18** - Framework UI
 - **Vite** - Build tool moderno
 - **React Router** - Roteamento SPA
@@ -52,264 +141,259 @@ O sistema é composto por **3 módulos principais** integrados:
 - **Lucide React** - Ícones
 - **React Hot Toast** - Notificações
 
-## 🚀 Funcionalidades
+### DevOps
+- **Git** - Controle de versão
+- **Bash Scripts** - Automação
+- **PM2** - Gerenciamento de processos
 
-### 📖 Gestão de Livros
-- ✅ **CRUD completo** de livros
-- ✅ **Busca avançada** com filtros (título, autor, categoria)
-- ✅ **Busca fuzzy** para encontrar livros mesmo com erros de digitação
-- ✅ **Paginação** eficiente
-- ✅ **Sistema de categorias** 
-- ✅ **Controle de estoque** (cópias disponíveis/total)
-- ✅ **Sistema de avaliações** com ratings
+## 🚀 Como Executar
 
-### 🔍 Busca e Descoberta
-- ✅ **Busca por texto livre** com Fuse.js
-- ✅ **Filtros combinados** (categoria, autor, disponibilidade)
-- ✅ **Sistema de recomendações** baseado em ratings
-- ✅ **Cache inteligente** para buscas frequentes
+### 📋 Pré-requisitos
+- Node.js 18+
+- Redis Server (opcional, sistema funciona sem)
+- Git
 
-### 🔐 Autenticação e Autorização
-- ✅ **JWT Authentication** 
-- ✅ **Controle de acesso** para operações administrativas
-- ✅ **Sessions persistentes**
-- ✅ **Logout seguro**
+### ⚡ Execução Automática
 
-### 📊 Monitoramento e Observabilidade
-- ✅ **Métricas Prometheus** em ambos os serviços
-- ✅ **Logging estruturado** com Winston
-- ✅ **Health checks** para monitoramento
-- ✅ **Rate limiting** para proteção contra DDoS
-- ✅ **Retry automático** com backoff exponencial
-
-### 🎨 Interface de Usuário
-- ✅ **Design responsivo** para desktop e mobile
-- ✅ **Interface intuitiva** e moderna
-- ✅ **Feedback visual** para todas as ações
-- ✅ **Loading states** e error handling
-- ✅ **Busca em tempo real**
-- ✅ **Dashboard administrativo**
-
-## 🏃‍♂️ Como Executar
-
-### Pré-requisitos
-- **Node.js** 18+ 
-- **npm** ou **yarn**
-- **Redis** (opcional, mas recomendado para cache)
-
-### 1️⃣ Clone o repositório
 ```bash
+# Clone o repositório
 git clone <url-do-repositorio>
 cd 2VA-Sistemas-Distribuidos
+
+# Execute automaticamente (método recomendado)
+cd api-gateway && npm install && cd ..
+cd books-service && npm install && cd ..
+cd frontend && npm install && cd ..
+
+# Popular banco de dados
+cd books-service && node seed.js && cd ..
+
+# Iniciar todos os serviços
+# Terminal 1: API Gateway
+cd api-gateway && npm start
+
+# Terminal 2: Books Service  
+cd books-service && npm start
+
+# Terminal 3: Frontend
+cd frontend && npm run dev
 ```
 
-### 2️⃣ Configure e inicie o Books Service
+### 🔧 Execução Passo a Passo
+
 ```bash
-cd books-service
-npm install
-npm run seed  # Popula o banco com dados de exemplo
-npm start     # Inicia na porta 3002
+# 1. Instalar dependências
+npm install # em cada diretório (api-gateway, books-service, frontend)
+
+# 2. Popular banco de dados
+cd books-service && node seed.js
+
+# 3. Iniciar serviços (em terminais separados)
+# Terminal 1
+cd api-gateway && npm start
+
+# Terminal 2
+cd books-service && npm start  
+
+# Terminal 3
+cd frontend && npm run dev
 ```
 
-### 3️⃣ Configure e inicie o API Gateway
-```bash
-cd ../api-gateway
-npm install
-npm start     # Inicia na porta 3001
-```
+## 📱 Acesso ao Sistema
 
-### 4️⃣ Configure e inicie o Frontend
-```bash
-cd ../frontend
-npm install
-npm run dev   # Inicia na porta 3000
-```
-
-### 5️⃣ (Opcional) Inicie o Redis
-```bash
-# Ubuntu/Debian
-sudo apt install redis-server
-redis-server
-
-# macOS
-brew install redis
-redis-server
-
-# Docker
-docker run -d -p 6379:6379 redis:alpine
-```
+### 🌐 URLs de Acesso
+- **Frontend:** http://localhost:5173
+- **API Gateway:** http://localhost:3000
+- **Books Service:** http://localhost:3001
+- **Métricas:** http://localhost:3000/metrics
 
 ### 🔑 Credenciais de Teste
-- **Usuário**: `admin`
-- **Senha**: `admin123`
 
-## 📚 Endpoints da API
+#### Administrador
+- **Usuário:** `admin`
+- **Senha:** `admin123`
+- **Acesso:** Completo ao sistema
 
-### API Gateway (http://localhost:3001)
+#### Usuário Comum
+- **Cadastro:** Via tela `/register`
+- **Acesso:** Limitado (sem catálogo/dashboard)
 
-#### Autenticação
-- `POST /auth/login` - Login do usuário
+## 📊 Monitoramento e Métricas
 
-#### Livros (com cache e proxy)
-- `GET /api/books` - Lista livros (paginado)
-- `GET /api/books/:id` - Busca livro por ID
-- `POST /api/books` - Cria novo livro (requer auth)
-- `PUT /api/books/:id` - Atualiza livro (requer auth)
-- `DELETE /api/books/:id` - Remove livro (requer auth)
-- `GET /api/search` - Busca avançada
-- `GET /api/recommendations` - Recomendações (requer auth)
+### 🔍 Health Checks
+```bash
+# Verificar saúde dos serviços
+curl http://localhost:3000/health
+curl http://localhost:3001/health
+```
 
-#### Monitoramento
-- `GET /health` - Health check
-- `GET /metrics` - Métricas Prometheus
-
-### Books Service (http://localhost:3002)
-
-#### Livros
-- `GET /books` - Lista livros
-- `GET /books/:id` - Busca livro por ID  
-- `POST /books` - Cria livro
-- `PUT /books/:id` - Atualiza livro
-- `DELETE /books/:id` - Remove livro
-- `GET /search` - Busca com Fuse.js
-- `GET /recommendations` - Sistema de recomendações
-- `GET /categories` - Lista categorias
-- `GET /stats` - Estatísticas do sistema
-
-## 🎯 Características de Sistemas Distribuídos
-
-### 🔄 **Complexidade**
-- **Arquitetura de Microserviços** com separação clara de responsabilidades
-- **API Gateway** como ponto único de entrada
-- **Comunicação assíncrona** entre serviços
-- **Cache distribuído** com Redis
-- **Sistema de retry** com backoff exponencial
-- **Load balancing** preparado para múltiplas instâncias
-
-### ✅ **Corretude**
-- **Validação rigorosa** em múltiplas camadas
-- **Tratamento de erros** abrangente
-- **Transações seguras** no banco de dados
-- **Autenticação JWT** robusta
-- **Sanitização** de dados de entrada
-
-### 📋 **Completude**
-- **CRUD completo** para todas as entidades
-- **Sistema de busca** avançado e eficiente
-- **Interface administrativa** completa
-- **Monitoramento** e observabilidade
-- **Documentação** técnica detalhada
-- **Seeds** para dados de exemplo
-
-### 🚀 **Criatividade**
-- **Busca fuzzy** para melhor UX
-- **Sistema de recomendações** inteligente
-- **Cache inteligente** com invalidação automática
-- **Interface moderna** e responsiva
-- **Métricas em tempo real** com Prometheus
-- **Rate limiting** adaptativo
-- **Graceful shutdown** para alta disponibilidade
-
-## 🔍 Demonstração dos Conceitos
-
-### 1. **Distribuição e Escalabilidade**
-- Cada serviço pode ser escalado independentemente
-- API Gateway permite adicionar novos serviços facilmente
-- Cache Redis melhora performance drasticamente
-
-### 2. **Tolerância a Falhas**
-- Retry automático em caso de falha de serviço
-- Circuit breaker pattern implementado
-- Graceful degradation quando Redis não está disponível
-
-### 3. **Consistência**
-- Invalidação automática de cache após mudanças
-- Transações atômicas no banco de dados
-- Estado consistente entre frontend e backend
-
-### 4. **Observabilidade**
-- Logs estruturados em todos os serviços
-- Métricas Prometheus para monitoramento
-- Health checks para status dos serviços
-
-## 📊 Métricas e Monitoramento
-
-O sistema oferece métricas detalhadas via Prometheus:
-
+### 📈 Métricas Prometheus
 ```bash
 # Métricas do API Gateway
+curl http://localhost:3000/metrics
+
+# Métricas do Books Service
 curl http://localhost:3001/metrics
-
-# Métricas do Books Service  
-curl http://localhost:3002/metrics
 ```
 
-### Principais métricas:
-- **http_requests_total** - Total de requisições HTTP
-- **http_request_duration_seconds** - Duração das requisições
-- **nodejs_heap_size_used_bytes** - Uso de memória
-- **nodejs_active_handles_total** - Handles ativos
+## 🧪 Testando o Sistema
 
-## 🧪 Scripts Úteis
+### 🎯 Fluxo de Teste Completo
 
+1. **Acesse:** http://localhost:5173
+2. **Registre um usuário comum** em `/register`
+3. **Faça login** e veja as limitações de acesso
+4. **Logout e login como admin** (`admin/admin123`)
+5. **Explore o catálogo completo** de livros
+6. **Teste a busca** com termos como "clean code" ou "clen cod"
+7. **Acesse o dashboard** para ver estatísticas
+8. **Use o painel admin** para gerenciar usuários
+
+### 🔍 Funcionalidades para Demonstrar
+
+#### **Complexidade Técnica:**
+- Navegue entre as páginas e observe a comunicação entre serviços
+- Teste a busca fuzzy com erros de digitação
+- Verifique o cache funcionando (mesmas consultas mais rápidas)
+- Observe os logs estruturados no terminal
+
+#### **Sistema Distribuído:**
+- Cada módulo roda independentemente
+- API Gateway roteia entre serviços
+- Cache Redis compartilhado (quando disponível)
+- Tolerância a falhas com retry
+
+#### **Interface Moderna:**
+- Design responsivo em diferentes telas
+- Animações suaves com Tailwind
+- Notificações em tempo real
+- Formulários com validação instantânea
+
+## 📁 Estrutura do Projeto
+
+```
+📦 2VA-Sistemas-Distribuidos/
+├── 🌐 api-gateway/          # Ponto de entrada único
+│   ├── server.js            # Servidor principal
+│   ├── package.json         # Dependências
+│   └── .env                # Configurações
+├── 📚 books-service/        # Microserviço de livros  
+│   ├── server.js            # Servidor de livros
+│   ├── seed.js             # Dados iniciais
+│   ├── biblioteca.db        # Banco SQLite
+│   └── package.json         # Dependências
+├── 🎨 frontend/             # Interface React
+│   ├── src/
+│   │   ├── components/      # Componentes reutilizáveis
+│   │   ├── pages/          # Páginas da aplicação
+│   │   ├── services/       # Integração com APIs
+│   │   └── contexts/       # Contextos React
+│   ├── package.json         # Dependências
+│   └── vite.config.js      # Configuração Vite
+└── 📋 README.md            # Documentação
+```
+
+## 🏆 Diferenciais Implementados
+
+### 🎨 **User Experience (UX)**
+- Interface intuitiva e moderna
+- Feedback visual em todas as ações
+- Loading states e skeleton screens
+- Mensagens de erro específicas e úteis
+- Navegação fluida entre páginas
+
+### ⚡ **Performance**
+- Cache Redis para consultas frequentes (opcional)
+- Debounce em campos de busca
+- Lazy loading de componentes
+- Otimização de bundle com Vite
+- Consultas otimizadas no backend
+
+### 🛡️ **Segurança**
+- Autenticação stateless com JWT
+- Autorização baseada em roles
+- Validação de entrada rigorosa
+- Rate limiting por IP
+- Headers de segurança com Helmet
+
+### 📊 **Observabilidade**
+- Logs estruturados em JSON
+- Métricas Prometheus customizadas
+- Health checks em todos os serviços
+- Monitoring de performance
+- Auditoria de ações administrativas
+
+## 🎓 Conceitos de Sistemas Distribuídos Demonstrados
+
+### 🏗️ **Arquitetura**
+- **Microserviços** independentes e especializados
+- **API Gateway** como ponto de entrada único
+- **Separação de responsabilidades** clara
+- **Escalabilidade horizontal** preparada
+
+### 🔄 **Comunicação**
+- **HTTP/REST** para comunicação síncrona
+- **JSON** como formato de troca de dados
+- **Proxy reverso** no API Gateway
+- **Circuit breaker** para tolerância a falhas
+
+### 💾 **Dados**
+- **Banco de dados** por serviço (SQLite)
+- **Cache distribuído** com Redis (opcional)
+- **Consistency eventual** aceitável
+- **Estado compartilhado** minimizado
+
+### 🛡️ **Confiabilidade**
+- **Health checks** automáticos
+- **Retry com backoff** exponencial
+- **Timeout** configurável
+- **Graceful degradation** em falhas
+
+## 📞 Troubleshooting
+
+### 🔧 Problemas Comuns
+
+#### **Erro de Porta em Uso**
 ```bash
-# Popular banco com dados de exemplo
-cd books-service && npm run seed
-
-# Executar em modo desenvolvimento (com restart automático)
-npm run dev
-
-# Ver logs do API Gateway
-tail -f api-gateway/gateway.log
-
-# Ver logs do Books Service
-tail -f books-service/books-service.log
-
-# Verificar health dos serviços
-curl http://localhost:3001/health
-curl http://localhost:3002/health
+# Encontrar e parar processos
+lsof -ti:3000 | xargs kill -9
+lsof -ti:3001 | xargs kill -9  
+lsof -ti:5173 | xargs kill -9
 ```
 
-## 🎯 Critérios de Avaliação Atendidos
+#### **Dependências não Instaladas**
+```bash
+# Reinstalar dependências
+rm -rf node_modules package-lock.json
+npm install
+```
 
-### ✅ **Complexidade**
-- Arquitetura distribuída real com 3 módulos independentes
-- Comunicação inter-serviços com retry e circuit breaker
-- Cache distribuído com invalidação inteligente
-- Sistema de autenticação JWT completo
-- Busca avançada com algoritmos de fuzzy matching
+#### **Banco de Dados Vazio**
+```bash
+# Repopular banco
+cd books-service
+rm biblioteca.db
+node seed.js
+```
 
-### ✅ **Corretude**
-- Validação em múltiplas camadas (frontend, gateway, service)
-- Tratamento robusto de erros e edge cases
-- Testes automatizados implementáveis
-- Transações atômicas e consistência de dados
-- Segurança implementada (helmet, rate limiting, JWT)
+#### **Cache Redis Indisponível**
+- Sistema funciona normalmente sem Redis
+- Cache em memória é usado como fallback
+- Não afeta funcionalidades principais
 
-### ✅ **Completude**
-- Sistema CRUD completo para livros
-- Interface de usuário moderna e funcional
-- Sistema de busca e recomendações
-- Monitoramento e observabilidade
-- Documentação técnica abrangente
-- Deploy pronto para produção
+## 🎯 Conclusão
 
-### ✅ **Criatividade**
-- Interface moderna com Tailwind CSS e componentes reutilizáveis
-- Busca fuzzy para melhor experiência do usuário
-- Sistema de recomendações baseado em machine learning simples
-- Cache inteligente com estratégias de invalidação
-- Métricas em tempo real para observabilidade
-- Graceful shutdown e health checks para alta disponibilidade
+Este sistema demonstra de forma prática e completa os conceitos fundamentais de sistemas distribuídos, implementando uma solução real e funcional que atende a todos os critérios de avaliação com criatividade e excelência técnica.
 
-## 🤝 Contribuição
+**Características Destacadas:**
+- ✅ **3 módulos independentes** funcionando como microserviços
+- ✅ **Interface gráfica moderna** e responsiva
+- ✅ **Sistema de autenticação robusto** com diferentes níveis de acesso
+- ✅ **Arquitetura distribuída real** com comunicação entre serviços
+- ✅ **Funcionalidades completas** de CRUD e busca avançada
+- ✅ **Monitoramento e observabilidade** implementados
+- ✅ **Documentação completa** para execução e avaliação
 
-Este é um projeto acadêmico desenvolvido para demonstrar conceitos de sistemas distribuídos. Sinta-se à vontade para explorar o código e experimentar com as funcionalidades!
-
-## 📝 Licença
-
-MIT License - Projeto acadêmico para fins educacionais.
 
 ---
 
-**Desenvolvido com ❤️ para a disciplina de Sistemas Distribuídos**
