@@ -152,20 +152,76 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Sistema simples de usuários em memória (em produção seria banco de dados)
+const users = [
+  { username: 'admin', password: 'admin123', role: 'admin', email: 'admin@biblioteca.com', fullName: 'Administrador' }
+];
+
+// Autenticação - Cadastro de usuário
+app.post('/api/auth/register', (req, res) => {
+  const { username, password, email, fullName } = req.body;
+  
+  // Validações básicas
+  if (!username || !password || !email || !fullName) {
+    return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+  }
+  
+  if (username.length < 3) {
+    return res.status(400).json({ error: 'Nome de usuário deve ter pelo menos 3 caracteres' });
+  }
+  
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Senha deve ter pelo menos 6 caracteres' });
+  }
+  
+  // Verificar se usuário já existe
+  const existingUser = users.find(user => user.username === username || user.email === email);
+  if (existingUser) {
+    return res.status(409).json({ error: 'Usuário ou email já existe' });
+  }
+  
+  // Criar novo usuário
+  const newUser = {
+    username,
+    password, // Em produção seria hash da senha
+    email,
+    fullName,
+    role: 'user'
+  };
+  
+  users.push(newUser);
+  
+  logger.info(`Novo usuário cadastrado: ${username}`);
+  res.status(201).json({ 
+    message: 'Usuário cadastrado com sucesso',
+    user: { username, email, fullName, role: 'user' }
+  });
+});
+
 // Autenticação - Login simples para demonstração
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
   
-  // Simulação de autenticação (em produção seria validado em banco)
-  if (username === 'admin' && password === 'admin123') {
+  // Buscar usuário na "base de dados" em memória
+  const user = users.find(u => u.username === username && u.password === password);
+  
+  if (user) {
     const token = jwt.sign(
-      { username, role: 'admin' },
+      { username: user.username, role: user.role },
       process.env.JWT_SECRET || 'secret-key',
       { expiresIn: '24h' }
     );
     
     logger.info(`Login realizado por ${username}`);
-    res.json({ token, user: { username, role: 'admin' } });
+    res.json({ 
+      token, 
+      user: { 
+        username: user.username, 
+        role: user.role, 
+        email: user.email, 
+        fullName: user.fullName 
+      } 
+    });
   } else {
     res.status(401).json({ error: 'Credenciais inválidas' });
   }

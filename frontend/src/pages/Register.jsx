@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { BookOpen, Eye, EyeOff, User, Mail, Lock } from 'lucide-react'
+import { authService } from '../services/api'
 import toast from 'react-hot-toast'
 
 const Register = () => {
@@ -23,23 +24,22 @@ const Register = () => {
     setIsLoading(true)
     
     try {
-      // Simulação de cadastro (em produção seria uma chamada para API)
-      await new Promise(resolve => setTimeout(resolve, 1500)) // Simula delay da API
-      
       // Remover confirmação de senha antes de enviar
       const { confirmPassword, ...userData } = data
       
-      console.log('Dados do usuário:', userData)
+      // Chamar API de cadastro
+      const response = await authService.register(userData)
       
       toast.success('Cadastro realizado com sucesso!')
-      toast.success('Redirecionando para login...')
+      toast.success('Agora você pode fazer login!')
       
       setTimeout(() => {
         navigate('/login')
       }, 2000)
       
     } catch (error) {
-      toast.error('Erro ao realizar cadastro. Tente novamente.')
+      const errorMessage = error.response?.data?.error || 'Erro ao realizar cadastro. Tente novamente.'
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
