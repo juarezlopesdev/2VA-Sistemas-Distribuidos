@@ -78,6 +78,19 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Middleware de autorização para admins
+const requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Token de acesso requerido' });
+  }
+  
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Acesso negado. Permissão de administrador necessária.' });
+  }
+  
+  next();
+};
+
 // Middleware de cache
 const cacheMiddleware = (duration = 300) => {
   return async (req, res, next) => {
@@ -202,30 +215,146 @@ app.post('/api/auth/register', (req, res) => {
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
   
-  // Buscar usuário na "base de dados" em memória
-  const user = users.find(u => u.username === username && u.password === password);
+  // Validar se os dados foram fornecidos
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
+  }
   
-  if (user) {
-    const token = jwt.sign(
-      { username: user.username, role: user.role },
-      process.env.JWT_SECRET || 'secret-key',
-      { expiresIn: '24h' }
-    );
+  // Verificar se o usuário existe
+  const userExists = users.find(u => u.username === username);
+  
+  if (!userExists) {
+    logger.warn(`Tentativa de login com usuário inexistente: ${username}`);
+    return res.status(401).json({ error: 'Usuário não encontrado' });
+  }
+  
+  // Verificar se a senha está correta
+  if (userExists.password !== password) {
+    logger.warn(`Tentativa de login com senha incorreta para usuário: ${username}`);
+    return res.status(401).json({ error: 'Senha incorreta' });
+  }
+  
+  // Login bem-sucedido
+  const token = jwt.sign(
+    { username: userExists.username, role: userExists.role },
+    process.env.JWT_SECRET || 'secret-key',
+    { expiresIn: '24h' }
+  );
+  
+  logger.info(`Login realizado por ${username}`);
+  res.json({ 
+    token, 
+    user: { 
+      username: userExists.username, 
+      role: userExists.role, 
+      email: userExists.email, 
+      fullName: userExists.fullName 
+    } 
+  });
+});
+
+// ===== ROTAS ADMINISTRATIVAS =====
+
+// Listar todos os usuários (apenas admin)
+app.get('/api/admin/users', authenticateToken, requireAdmin, (req, res) => {
+  const usersData = users.map(user => ({
+    username: user.username,
+    email: user.email,
+    fullName: user.fullName,
+    role: user.role
+  }));
+  
+  logger.info(`Admin ${req.user.username} listou usuários`);
+  res.json(usersData);
+});
+
+// Atualizar role de usuário (apenas admin)
+app.put('/api/admin/users/:username/role', authenticateToken, requireAdmin, (req, res) => {
+  const { username } = req.params;
+  const { role } = req.body;
+  
+  if (!['user', 'admin'].includes(role)) {
+    return res.status(400).json({ error: 'Role deve ser "user" ou "admin"' });
+  }
+  
+  const userIndex = users.findIndex(u => u.username === username);
+  if (userIndex === -1) {
+    return res.status(404).json({ error: 'Usuário não encontrado' });
+  }
+  
+  users[userIndex].role = role;
+  
+  logger.info(`Admin ${req.user.username} alterou role do usuário ${username} para ${role}`);
+  res.json({ 
+    message: 'Role atualizada com sucesso',
+    user: {
+      username: users[userIndex].username,
+      email: users[userIndex].email,
+      fullName: users[userIndex].fullName,
+      role: users[userIndex].role
+    }
+  });
+});
+
+// Deletar usuário (apenas admin)
+app.delete('/api/admin/users/:username', authenticateToken, requireAdmin, (req, res) => {
+  const { username } = req.params;
+  
+  if (username === req.user.username) {
+    return res.status(400).json({ error: 'Não é possível deletar seu próprio usuário' });
+  }
+  
+  const userIndex = users.findIndex(u => u.username === username);
+  if (userIndex === -1) {
+    return res.status(404).json({ error: 'Usuário não encontrado' });
+  }
+  
+  const deletedUser = users.splice(userIndex, 1)[0];
+  
+  logger.info(`Admin ${req.user.username} deletou usuário ${username}`);
+  res.json({ 
+    message: 'Usuário deletado com sucesso',
+    deletedUser: {
+      username: deletedUser.username,
+      email: deletedUser.email,
+      fullName: deletedUser.fullName,
+      role: deletedUser.role
+    }
+  });
+});
+
+// Estatísticas do sistema (apenas admin)
+app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    // Estatísticas de usuários
+    const userStats = {
+      total: users.length,
+      admins: users.filter(u => u.role === 'admin').length,
+      regularUsers: users.filter(u => u.role === 'user').length
+    };
     
-    logger.info(`Login realizado por ${username}`);
-    res.json({ 
-      token, 
-      user: { 
-        username: user.username, 
-        role: user.role, 
-        email: user.email, 
-        fullName: user.fullName 
-      } 
+    // Buscar estatísticas dos livros do serviço
+    let bookStats = {};
+    try {
+      bookStats = await proxyRequest('books', '/stats');
+    } catch (error) {
+      logger.error('Erro ao obter estatísticas dos livros:', error.message);
+      bookStats = { error: 'Dados indisponíveis' };
+    }
+    
+    logger.info(`Admin ${req.user.username} acessou estatísticas do sistema`);
+    res.json({
+      users: userStats,
+      books: bookStats,
+      timestamp: new Date().toISOString()
     });
-  } else {
-    res.status(401).json({ error: 'Credenciais inválidas' });
+  } catch (error) {
+    logger.error('Erro ao obter estatísticas:', error.message);
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
+// ===== ROTAS DE LIVROS =====
 
 // Rotas do serviço de livros com cache
 app.get('/api/books', cacheMiddleware(300), async (req, res) => {
@@ -249,7 +378,7 @@ app.get('/api/books/:id', cacheMiddleware(600), async (req, res) => {
   }
 });
 
-app.post('/api/books', authenticateToken, async (req, res) => {
+app.post('/api/books', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const data = await proxyRequest('books', '/books', 'POST', req.body);
     logger.info(`Livro criado por ${req.user.username}`);
@@ -269,7 +398,7 @@ app.post('/api/books', authenticateToken, async (req, res) => {
   }
 });
 
-app.put('/api/books/:id', authenticateToken, async (req, res) => {
+app.put('/api/books/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const data = await proxyRequest('books', `/books/${req.params.id}`, 'PUT', req.body);
     logger.info(`Livro ${req.params.id} atualizado por ${req.user.username}`);
@@ -285,7 +414,7 @@ app.put('/api/books/:id', authenticateToken, async (req, res) => {
   }
 });
 
-app.delete('/api/books/:id', authenticateToken, async (req, res) => {
+app.delete('/api/books/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     await proxyRequest('books', `/books/${req.params.id}`, 'DELETE');
     logger.info(`Livro ${req.params.id} removido por ${req.user.username}`);

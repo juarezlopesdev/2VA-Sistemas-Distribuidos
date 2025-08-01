@@ -10,6 +10,7 @@ import BookDetail from './pages/BookDetail'
 import BookForm from './pages/BookForm'
 import Search from './pages/Search'
 import Dashboard from './pages/Dashboard'
+import AdminPanel from './pages/AdminPanel'
 import LoadingSpinner from './components/LoadingSpinner'
 
 // Componente para proteger rotas que precisam de autenticação
@@ -34,6 +35,25 @@ const PublicRoute = ({ children }) => {
   return !isAuthenticated ? children : <Navigate to="/books" replace />
 }
 
+// Componente para proteger rotas administrativas
+const AdminRoute = ({ children }) => {
+  const { user, isAuthenticated, isLoading } = useAuth()
+  
+  if (isLoading) {
+    return <LoadingSpinner />
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />
+  }
+  
+  if (user?.role !== 'admin') {
+    return <Navigate to="/books" />
+  }
+  
+  return children
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -51,25 +71,43 @@ function AppRoutes() {
       
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
-        <Route path="books" element={<BookList />} />
-        <Route path="books/:id" element={<BookDetail />} />
-        <Route path="search" element={<Search />} />
+        {/* Catálogo só para admins */}
+        <Route path="books" element={
+          <AdminRoute>
+            <BookList />
+          </AdminRoute>
+        } />
+        <Route path="books/:id" element={
+          <AdminRoute>
+            <BookDetail />
+          </AdminRoute>
+        } />
+        <Route path="search" element={
+          <AdminRoute>
+            <Search />
+          </AdminRoute>
+        } />
         
-        {/* Rotas protegidas */}
+        {/* Rotas administrativas */}
         <Route path="admin" element={
-          <ProtectedRoute>
+          <AdminRoute>
             <Dashboard />
-          </ProtectedRoute>
+          </AdminRoute>
+        } />
+        <Route path="admin/panel" element={
+          <AdminRoute>
+            <AdminPanel />
+          </AdminRoute>
         } />
         <Route path="books/new" element={
-          <ProtectedRoute>
+          <AdminRoute>
             <BookForm />
-          </ProtectedRoute>
+          </AdminRoute>
         } />
         <Route path="books/:id/edit" element={
-          <ProtectedRoute>
+          <AdminRoute>
             <BookForm />
-          </ProtectedRoute>
+          </AdminRoute>
         } />
       </Route>
       

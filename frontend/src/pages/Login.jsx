@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const { login } = useAuth()
   const navigate = useNavigate()
   
@@ -19,6 +20,7 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     setIsLoading(true)
+    setErrorMessage('') // Limpar erro anterior
     
     try {
       const result = await login(data)
@@ -28,10 +30,29 @@ const Login = () => {
         // Redirecionar para a página de livros após login bem-sucedido
         navigate('/books')
       } else {
-        toast.error(result.error || 'Erro no login')
+        // Mensagens de erro específicas
+        let errorMsg = ''
+        switch (result.error) {
+          case 'Usuário não encontrado':
+            errorMsg = 'Este usuário não existe. Verifique o nome de usuário ou crie uma nova conta.'
+            break
+          case 'Senha incorreta':
+            errorMsg = 'Senha incorreta. Verifique sua senha e tente novamente.'
+            break
+          case 'Usuário e senha são obrigatórios':
+            errorMsg = 'Por favor, preencha todos os campos.'
+            break
+          default:
+            errorMsg = result.error || 'Erro no login. Tente novamente.'
+        }
+        
+        setErrorMessage(errorMsg)
+        toast.error(errorMsg)
       }
     } catch (error) {
-      toast.error('Erro inesperado no login')
+      const errorMsg = 'Erro inesperado no login. Tente novamente.'
+      setErrorMessage(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -57,6 +78,22 @@ const Login = () => {
             </Link>
           </p>
         </div>
+        
+        {/* Mensagem de erro */}
+        {errorMessage && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-800">{errorMessage}</p>
+              </div>
+            </div>
+          </div>
+        )}
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">

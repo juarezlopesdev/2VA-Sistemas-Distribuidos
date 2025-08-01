@@ -47,54 +47,79 @@ const Home = () => {
             {isAuthenticated ? (
               // Seção para usuários logados
               <div className="mb-8">
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-2xl mx-auto mb-6">
-                  <h3 className="text-lg font-semibold mb-2">
-                    Bem-vindo de volta, {user?.username}! 👋
-                  </h3>
-                  <p className="text-primary-100 mb-4">
-                    Acesse rapidamente suas funcionalidades de administrador
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link
-                    to="/books"
-                    className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50 transition-colors"
-                  >
-                    <BookOpen className="mr-2 h-5 w-5" />
-                    Ver Catálogo
-                  </Link>
-                  <Link
-                    to="/books/new"
-                    className="inline-flex items-center justify-center px-6 py-3 border-2 border-white text-base font-medium rounded-md text-white bg-transparent hover:bg-white hover:text-primary-600 transition-colors"
-                  >
-                    <Plus className="mr-2 h-5 w-5" />
-                    Adicionar Livro
-                  </Link>
-                  <Link
-                    to="/admin"
-                    className="inline-flex items-center justify-center px-6 py-3 border-2 border-white text-base font-medium rounded-md text-white bg-transparent hover:bg-white hover:text-primary-600 transition-colors"
-                  >
-                    <Settings className="mr-2 h-5 w-5" />
-                    Dashboard
-                  </Link>
-                </div>
+                {user?.role === 'admin' ? (
+                  // Conteúdo para administradores
+                  <div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-2xl mx-auto mb-6">
+                      <h2 className="text-2xl font-bold mb-4 text-white">
+                        Bem-vindo, Administrador {user.fullName}!
+                      </h2>
+                      <p className="text-primary-100 mb-4">
+                        Gerencie o sistema, adicione novos livros e monitore as atividades.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-4 justify-center">
+                      <Link
+                        to="/books"
+                        className="btn btn-white px-6 py-3 flex items-center space-x-2"
+                      >
+                        <BookOpen className="h-5 w-5" />
+                        <span>Ver Catálogo</span>
+                      </Link>
+                      <Link
+                        to="/admin/panel"
+                        className="btn btn-secondary px-6 py-3 flex items-center space-x-2"
+                      >
+                        <Settings className="h-5 w-5" />
+                        <span>Painel Admin</span>
+                      </Link>
+                      <Link
+                        to="/admin"
+                        className="btn btn-secondary px-6 py-3 flex items-center space-x-2"
+                      >
+                        <BarChart3 className="h-5 w-5" />
+                        <span>Dashboard</span>
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  // Conteúdo para usuários comuns
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-2xl mx-auto">
+                    <h2 className="text-2xl font-bold mb-4 text-white">
+                      Bem-vindo, {user.fullName}!
+                    </h2>
+                    <p className="text-primary-100 mb-4">
+                      Você está logado no sistema. Para acessar funcionalidades administrativas, 
+                      entre em contato com um administrador.
+                    </p>
+                    <div className="text-sm text-primary-200">
+                      <p>🔒 Funcionalidades disponíveis apenas para administradores:</p>
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        <li>Visualizar catálogo de livros</li>
+                        <li>Adicionar e editar livros</li>
+                        <li>Acessar dashboard e estatísticas</li>
+                        <li>Gerenciar usuários do sistema</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               // Seção para usuários não logados
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  to="/books"
+                  to="/login"
                   className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50 transition-colors"
                 >
-                  <BookOpen className="mr-2 h-5 w-5" />
-                  Explorar Catálogo
+                  <Users className="mr-2 h-5 w-5" />
+                  Fazer Login
                 </Link>
                 <Link
-                  to="/search"
+                  to="/register"
                   className="inline-flex items-center justify-center px-8 py-3 border-2 border-white text-base font-medium rounded-md text-white bg-transparent hover:bg-white hover:text-primary-600 transition-colors"
                 >
-                  <Search className="mr-2 h-5 w-5" />
-                  Buscar Livros
+                  <Plus className="mr-2 h-5 w-5" />
+                  Criar Conta
                 </Link>
               </div>
             )}

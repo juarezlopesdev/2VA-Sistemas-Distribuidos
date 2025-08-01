@@ -90,6 +90,28 @@ export const booksService = {
   }
 }
 
+export const adminService = {
+  getUsers: async () => {
+    const response = await api.get('/admin/users')
+    return response.data
+  },
+  
+  updateUserRole: async (username, role) => {
+    const response = await api.put(`/admin/users/${username}/role`, { role })
+    return response.data
+  },
+  
+  deleteUser: async (username) => {
+    const response = await api.delete(`/admin/users/${username}`)
+    return response.data
+  },
+  
+  getStats: async () => {
+    const response = await api.get('/admin/stats')
+    return response.data
+  }
+}
+
 export const statsService = {
   getStats: async () => {
     const response = await api.get('/stats')

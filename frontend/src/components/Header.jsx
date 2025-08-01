@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, BookOpen, Menu, X, User, LogOut, Plus, BarChart3 } from 'lucide-react'
+import { Search, BookOpen, Menu, X, User, LogOut, Plus, BarChart3, Shield } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const Header = () => {
@@ -52,34 +52,57 @@ const Header = () => {
 
           {/* Navegação - Desktop */}
           <nav className="hidden md:flex items-center space-x-4">
-            <Link
-              to="/books"
-              className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              Catálogo
-            </Link>
+            {/* Catálogo só para admins */}
+            {isAuthenticated && user?.role === 'admin' && (
+              <Link
+                to="/books"
+                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Catálogo
+              </Link>
+            )}
             
             {isAuthenticated ? (
               <>
-                <Link
-                  to="/books/new"
-                  className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Adicionar</span>
-                </Link>
+                {user?.role === 'admin' && (
+                  <>
+                    <Link
+                      to="/books/new"
+                      className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Adicionar</span>
+                    </Link>
+                    
+                    <Link
+                      to="/admin/panel"
+                      className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      <Shield className="h-4 w-4" />
+                      <span>Admin</span>
+                    </Link>
+                  </>
+                )}
                 
-                <Link
-                  to="/admin"
-                  className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </Link>
+                {/* Dashboard só para admins */}
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                )}
                 
                 <div className="flex items-center space-x-2 text-gray-700">
                   <User className="h-4 w-4" />
                   <span className="text-sm">{user?.username}</span>
+                  {user?.role === 'admin' && (
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                      Admin
+                    </span>
+                  )}
                 </div>
                 
                 <button
@@ -130,34 +153,59 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden border-t border-gray-200 bg-white">
           <div className="px-4 py-2 space-y-1">
-            <Link
-              to="/books"
-              className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Catálogo
-            </Link>
+            {/* Catálogo só para admins */}
+            {isAuthenticated && user?.role === 'admin' && (
+              <Link
+                to="/books"
+                className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Catálogo
+              </Link>
+            )}
             
             {isAuthenticated ? (
               <>
-                <Link
-                  to="/books/new"
-                  className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Adicionar Livro
-                </Link>
+                {user?.role === 'admin' && (
+                  <>
+                    <Link
+                      to="/books/new"
+                      className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Adicionar Livro
+                    </Link>
+                    
+                    <Link
+                      to="/admin/panel"
+                      className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Painel Administrativo
+                    </Link>
+                  </>
+                )}
                 
-                <Link
-                  to="/admin"
-                  className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
+                {/* Dashboard só para admins */}
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                )}
                 
                 <div className="px-3 py-2 text-sm text-gray-500 border-t border-gray-200">
-                  Logado como: {user?.username}
+                  <div className="flex items-center justify-between">
+                    <span>Logado como: {user?.username}</span>
+                    {user?.role === 'admin' && (
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                        Admin
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 <button
