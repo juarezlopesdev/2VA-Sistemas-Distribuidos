@@ -1,0 +1,34 @@
+{
+  "name": "biblioteca-digital-frontend",
+  "version": "1.0.0",
+  "description": "Interface Web para Sistema de Biblioteca Digital Distribuída",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.11.2",
+    "axios": "^1.4.0",
+    "react-query": "^3.39.3",
+    "react-hook-form": "^7.44.3",
+    "react-hot-toast": "^2.4.1",
+    "lucide-react": "^0.239.0",
+    "clsx": "^1.2.1",
+    "tailwindcss": "^3.3.2",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.3.9",
+    "eslint": "^8.42.0",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "proxy": "http://localhost:3001"
+}

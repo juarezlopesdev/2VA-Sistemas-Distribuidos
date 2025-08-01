@@ -1,0 +1,327 @@
+const express = require('express');
+const helmet = require('helmet');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
+const axios = require('axios');
+const redis = require('redis');
+const winston = require('winston');
+const promMid = require('express-prometheus-middleware');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Configuração do Logger
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: 'gateway.log' })
+  ]
+});
+
+// Configuração do Redis para cache
+const redisClient = redis.createClient({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: process.env.REDIS_PORT || 6379
+});
+
+// Middleware de segurança
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 requests por IP
+  message: 'Muitas requisições deste IP, tente novamente em 15 minutos.'
+});
+app.use(limiter);
+
+// Métricas Prometheus
+app.use(promMid({
+  metricsPath: '/metrics',
+  collectDefaultMetrics: true,
+  requestDurationBuckets: [0.1, 0.5, 1, 1.5]
+}));
+
+// Configuração dos serviços
+const SERVICES = {
+  books: {
+    url: process.env.BOOKS_SERVICE_URL || 'http://localhost:3001',
+    timeout: 5000,
+    retries: 3
+  }
+};
+
+// Middleware de autenticação JWT
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token de acesso requerido' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET || 'secret-key', (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Token inválido' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// Middleware de cache
+const cacheMiddleware = (duration = 300) => {
+  return async (req, res, next) => {
+    if (req.method !== 'GET') {
+      return next();
+    }
+
+    const key = `cache:${req.originalUrl}`;
+    
+    try {
+      const cached = await redisClient.get(key);
+      if (cached) {
+        logger.info(`Cache hit for ${req.originalUrl}`);
+        return res.json(JSON.parse(cached));
+      }
+    } catch (error) {
+      logger.error('Redis error:', error);
+    }
+
+    res.sendResponse = res.json;
+    res.json = (body) => {
+      try {
+        redisClient.setex(key, duration, JSON.stringify(body));
+      } catch (error) {
+        logger.error('Redis cache error:', error);
+      }
+      res.sendResponse(body);
+    };
+
+    next();
+  };
+};
+
+// Função para fazer proxy das requisições com retry
+const proxyRequest = async (service, path, method = 'GET', data = null, retries = 3) => {
+  const serviceConfig = SERVICES[service];
+  
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const config = {
+        method,
+        url: `${serviceConfig.url}${path}`,
+        timeout: serviceConfig.timeout,
+        headers: { 'Content-Type': 'application/json' }
+      };
+
+      if (data) {
+        config.data = data;
+      }
+
+      const response = await axios(config);
+      return response.data;
+    } catch (error) {
+      logger.error(`Tentativa ${attempt} falhou para ${service}${path}:`, error.message);
+      
+      if (attempt === retries) {
+        throw new Error(`Serviço ${service} indisponível após ${retries} tentativas`);
+      }
+      
+      // Backoff exponencial
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+    }
+  }
+};
+
+// Health Check
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    services: Object.keys(SERVICES)
+  });
+});
+
+// Autenticação - Login simples para demonstração
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  
+  // Simulação de autenticação (em produção seria validado em banco)
+  if (username === 'admin' && password === 'admin123') {
+    const token = jwt.sign(
+      { username, role: 'admin' },
+      process.env.JWT_SECRET || 'secret-key',
+      { expiresIn: '24h' }
+    );
+    
+    logger.info(`Login realizado por ${username}`);
+    res.json({ token, user: { username, role: 'admin' } });
+  } else {
+    res.status(401).json({ error: 'Credenciais inválidas' });
+  }
+});
+
+// Rotas do serviço de livros com cache
+app.get('/api/books', cacheMiddleware(300), async (req, res) => {
+  try {
+    const data = await proxyRequest('books', '/books');
+    logger.info('Livros obtidos com sucesso');
+    res.json(data);
+  } catch (error) {
+    logger.error('Erro ao obter livros:', error.message);
+    res.status(503).json({ error: 'Serviço temporariamente indisponível' });
+  }
+});
+
+app.get('/api/books/:id', cacheMiddleware(600), async (req, res) => {
+  try {
+    const data = await proxyRequest('books', `/books/${req.params.id}`);
+    res.json(data);
+  } catch (error) {
+    logger.error(`Erro ao obter livro ${req.params.id}:`, error.message);
+    res.status(404).json({ error: 'Livro não encontrado' });
+  }
+});
+
+app.post('/api/books', authenticateToken, async (req, res) => {
+  try {
+    const data = await proxyRequest('books', '/books', 'POST', req.body);
+    logger.info(`Livro criado por ${req.user.username}`);
+    
+    // Invalidar cache
+    const pattern = 'cache:/api/books*';
+    redisClient.keys(pattern).then(keys => {
+      if (keys.length > 0) {
+        redisClient.del(keys);
+      }
+    });
+    
+    res.status(201).json(data);
+  } catch (error) {
+    logger.error('Erro ao criar livro:', error.message);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+app.put('/api/books/:id', authenticateToken, async (req, res) => {
+  try {
+    const data = await proxyRequest('books', `/books/${req.params.id}`, 'PUT', req.body);
+    logger.info(`Livro ${req.params.id} atualizado por ${req.user.username}`);
+    
+    // Invalidar cache específico
+    redisClient.del(`cache:/api/books/${req.params.id}`);
+    redisClient.del('cache:/api/books');
+    
+    res.json(data);
+  } catch (error) {
+    logger.error(`Erro ao atualizar livro ${req.params.id}:`, error.message);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+app.delete('/api/books/:id', authenticateToken, async (req, res) => {
+  try {
+    await proxyRequest('books', `/books/${req.params.id}`, 'DELETE');
+    logger.info(`Livro ${req.params.id} removido por ${req.user.username}`);
+    
+    // Invalidar cache
+    redisClient.del(`cache:/api/books/${req.params.id}`);
+    redisClient.del('cache:/api/books');
+    
+    res.status(204).send();
+  } catch (error) {
+    logger.error(`Erro ao remover livro ${req.params.id}:`, error.message);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Busca avançada com cache inteligente
+app.get('/api/search', cacheMiddleware(180), async (req, res) => {
+  try {
+    const { q, category, author } = req.query;
+    const searchPath = `/search?q=${encodeURIComponent(q || '')}&category=${encodeURIComponent(category || '')}&author=${encodeURIComponent(author || '')}`;
+    const data = await proxyRequest('books', searchPath);
+    
+    logger.info(`Busca realizada: ${q}`);
+    res.json(data);
+  } catch (error) {
+    logger.error('Erro na busca:', error.message);
+    res.status(500).json({ error: 'Erro na busca' });
+  }
+});
+
+// Recomendações personalizadas
+app.get('/api/recommendations', authenticateToken, cacheMiddleware(900), async (req, res) => {
+  try {
+    const data = await proxyRequest('books', `/recommendations?user=${req.user.username}`);
+    res.json(data);
+  } catch (error) {
+    logger.error('Erro ao obter recomendações:', error.message);
+    res.status(500).json({ error: 'Erro ao obter recomendações' });
+  }
+});
+
+// Categorias
+app.get('/api/categories', cacheMiddleware(3600), async (req, res) => {
+  try {
+    const data = await proxyRequest('books', '/categories');
+    res.json(data);
+  } catch (error) {
+    logger.error('Erro ao obter categorias:', error.message);
+    res.status(500).json({ error: 'Erro ao obter categorias' });
+  }
+});
+
+// Estatísticas
+app.get('/api/stats', authenticateToken, cacheMiddleware(300), async (req, res) => {
+  try {
+    const data = await proxyRequest('books', '/stats');
+    res.json(data);
+  } catch (error) {
+    logger.error('Erro ao obter estatísticas:', error.message);
+    res.status(500).json({ error: 'Erro ao obter estatísticas' });
+  }
+});
+
+// Middleware de tratamento de erros
+app.use((error, req, res, next) => {
+  logger.error('Erro não tratado:', error);
+  res.status(500).json({ error: 'Erro interno do servidor' });
+});
+
+// Middleware para rotas não encontradas
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Rota não encontrada' });
+});
+
+// Inicialização do servidor
+const server = app.listen(PORT, () => {
+  logger.info(`API Gateway rodando na porta ${PORT}`);
+  
+  // Conectar ao Redis
+  redisClient.connect().catch(err => {
+    logger.error('Erro ao conectar ao Redis:', err);
+  });
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('Recebido SIGTERM, fechando servidor...');
+  server.close(() => {
+    redisClient.quit();
+    logger.info('Servidor fechado');
+    process.exit(0);
+  });
+});
+
+module.exports = app;
