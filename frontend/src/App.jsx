@@ -71,21 +71,21 @@ function AppRoutes() {
       
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
-        {/* Catálogo só para admins */}
+        {/* Catálogo para usuários logados */}
         <Route path="books" element={
-          <AdminRoute>
+          <ProtectedRoute>
             <BookList />
-          </AdminRoute>
+          </ProtectedRoute>
         } />
         <Route path="books/:id" element={
-          <AdminRoute>
+          <ProtectedRoute>
             <BookDetail />
-          </AdminRoute>
+          </ProtectedRoute>
         } />
         <Route path="search" element={
-          <AdminRoute>
+          <ProtectedRoute>
             <Search />
-          </AdminRoute>
+          </ProtectedRoute>
         } />
         
         {/* Rotas administrativas */}

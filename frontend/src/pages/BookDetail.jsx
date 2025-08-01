@@ -10,7 +10,7 @@ import toast from 'react-hot-toast'
 const BookDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const queryClient = useQueryClient()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
@@ -77,7 +77,7 @@ const BookDetail = () => {
             <span>Voltar ao catálogo</span>
           </Link>
 
-          {isAuthenticated && (
+          {isAuthenticated && user?.role === 'admin' && (
             <div className="flex space-x-2">
               <Link
                 to={`/books/${id}/edit`}

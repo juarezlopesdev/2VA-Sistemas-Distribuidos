@@ -52,17 +52,16 @@ const Header = () => {
 
           {/* Navegação - Desktop */}
           <nav className="hidden md:flex items-center space-x-4">
-            {/* Catálogo só para admins */}
-            {isAuthenticated && user?.role === 'admin' && (
+            {/* Catálogo para todos os usuários logados */}
+            {isAuthenticated && (
               <Link
                 to="/books"
-                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
-                Catálogo
+                <BookOpen className="h-4 w-4" />
+                <span>Livros</span>
               </Link>
-            )}
-            
-            {isAuthenticated ? (
+            )}            {isAuthenticated ? (
               <>
                 {user?.role === 'admin' && (
                   <>
@@ -153,14 +152,14 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden border-t border-gray-200 bg-white">
           <div className="px-4 py-2 space-y-1">
-            {/* Catálogo só para admins */}
-            {isAuthenticated && user?.role === 'admin' && (
+            {/* Livros para todos os usuários logados */}
+            {isAuthenticated && (
               <Link
                 to="/books"
                 className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Catálogo
+                Livros
               </Link>
             )}
             

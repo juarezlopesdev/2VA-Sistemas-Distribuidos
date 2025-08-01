@@ -13,7 +13,7 @@ const BookList = () => {
     author: '',
     available: false
   })
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
 
   const { data, isLoading, error } = useQuery(
     ['books', currentPage, filters],
@@ -74,7 +74,7 @@ const BookList = () => {
             </p>
           </div>
           
-          {isAuthenticated && (
+          {isAuthenticated && user?.role === 'admin' && (
             <Link
               to="/books/new"
               className="btn btn-primary flex items-center space-x-2"

@@ -75,9 +75,11 @@ O sistema é composto por **3 módulos principais** integrados:
 - **Permissões:**
   - ✅ Fazer login/logout
   - ✅ Visualizar página inicial
-  - ❌ Acesso ao catálogo (restrito)
+  - ✅ Acessar catálogo de livros (visualização)
+  - ✅ Ver detalhes dos livros
+  - ❌ Adicionar, editar ou remover livros
   - ❌ Acesso ao dashboard (restrito)
-  - ❌ Funcionalidades administrativas
+  - ❌ Painel administrativo
 
 ### 🛡️ **Segurança Implementada**
 - **JWT Tokens** com expiração configurável
@@ -89,8 +91,9 @@ O sistema é composto por **3 módulos principais** integrados:
 
 ## 🚀 Funcionalidades
 
-### 📖 Gestão de Livros (Admin Only)
-- ✅ **CRUD completo** de livros
+### 📖 Gestão de Livros
+- ✅ **Visualização do catálogo** para todos os usuários logados
+- ✅ **CRUD completo** de livros (somente admins)
 - ✅ **Busca avançada** com filtros (título, autor, categoria)
 - ✅ **Busca fuzzy** para encontrar livros mesmo com erros de digitação
 - ✅ **Sistema de categorias** organizado
@@ -268,30 +271,6 @@ curl http://localhost:3001/metrics
 - Animações suaves com Tailwind
 - Notificações em tempo real
 - Formulários com validação instantânea
-
-## 📁 Estrutura do Projeto
-
-```
-📦 2VA-Sistemas-Distribuidos/
-├── 🌐 api-gateway/          # Ponto de entrada único
-│   ├── server.js            # Servidor principal
-│   ├── package.json         # Dependências
-│   └── .env                # Configurações
-├── 📚 books-service/        # Microserviço de livros  
-│   ├── server.js            # Servidor de livros
-│   ├── seed.js             # Dados iniciais
-│   ├── biblioteca.db        # Banco SQLite
-│   └── package.json         # Dependências
-├── 🎨 frontend/             # Interface React
-│   ├── src/
-│   │   ├── components/      # Componentes reutilizáveis
-│   │   ├── pages/          # Páginas da aplicação
-│   │   ├── services/       # Integração com APIs
-│   │   └── contexts/       # Contextos React
-│   ├── package.json         # Dependências
-│   └── vite.config.js      # Configuração Vite
-└── 📋 README.md            # Documentação
-```
 
 ## 🏆 Diferenciais Implementados
 

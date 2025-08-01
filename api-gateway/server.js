@@ -174,22 +174,35 @@ const users = [
 app.post('/api/auth/register', (req, res) => {
   const { username, password, email, fullName } = req.body;
   
+  logger.info(`Tentativa de cadastro para usuário: ${username}, email: ${email}`);
+  
   // Validações básicas
   if (!username || !password || !email || !fullName) {
+    logger.warn('Campos obrigatórios faltando no cadastro');
     return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
   }
   
+  // Validar formato do email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    logger.warn(`Email inválido: ${email}`);
+    return res.status(400).json({ error: 'Email inválido' });
+  }
+  
   if (username.length < 3) {
+    logger.warn(`Nome de usuário muito curto: ${username}`);
     return res.status(400).json({ error: 'Nome de usuário deve ter pelo menos 3 caracteres' });
   }
   
   if (password.length < 6) {
+    logger.warn('Senha muito curta');
     return res.status(400).json({ error: 'Senha deve ter pelo menos 6 caracteres' });
   }
   
   // Verificar se usuário já existe
   const existingUser = users.find(user => user.username === username || user.email === email);
   if (existingUser) {
+    logger.warn(`Usuário ou email já existe: ${username}, ${email}`);
     return res.status(409).json({ error: 'Usuário ou email já existe' });
   }
   

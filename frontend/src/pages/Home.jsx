@@ -90,18 +90,17 @@ const Home = () => {
                     <h2 className="text-2xl font-bold mb-4 text-white">
                       Bem-vindo, {user.fullName}!
                     </h2>
-                    <p className="text-primary-100 mb-4">
-                      Você está logado no sistema. Para acessar funcionalidades administrativas, 
-                      entre em contato com um administrador.
+                    <p className="text-primary-100 mb-6">
+                      Explore nosso catálogo de livros e descubra novos títulos.
                     </p>
-                    <div className="text-sm text-primary-200">
-                      <p>🔒 Funcionalidades disponíveis apenas para administradores:</p>
-                      <ul className="list-disc list-inside mt-2 space-y-1">
-                        <li>Visualizar catálogo de livros</li>
-                        <li>Adicionar e editar livros</li>
-                        <li>Acessar dashboard e estatísticas</li>
-                        <li>Gerenciar usuários do sistema</li>
-                      </ul>
+                    <div className="flex justify-center">
+                      <Link
+                        to="/books"
+                        className="btn btn-white px-6 py-3 flex items-center space-x-2"
+                      >
+                        <BookOpen className="h-5 w-5" />
+                        <span>Ver Catálogo</span>
+                      </Link>
                     </div>
                   </div>
                 )}
