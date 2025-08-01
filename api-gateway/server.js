@@ -26,10 +26,32 @@ const logger = winston.createLogger({
 });
 
 // Configuração do Redis para cache
-const redisClient = redis.createClient({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379
-});
+let redisClient;
+try {
+  redisClient = redis.createClient({
+    socket: {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379
+    }
+  });
+  
+  redisClient.on('error', (err) => {
+    logger.warn('Redis error:', err.message);
+  });
+  
+  redisClient.on('connect', () => {
+    logger.info('Redis connected');
+  });
+  
+  // Conectar ao Redis de forma assíncrona
+  redisClient.connect().catch(err => {
+    logger.warn('Redis connection failed:', err.message);
+    redisClient = null; // Desabilitar cache se Redis não estiver disponível
+  });
+} catch (error) {
+  logger.warn('Redis not available:', error.message);
+  redisClient = null;
+}
 
 // Middleware de segurança
 app.use(helmet());
@@ -94,7 +116,7 @@ const requireAdmin = (req, res, next) => {
 // Middleware de cache
 const cacheMiddleware = (duration = 300) => {
   return async (req, res, next) => {
-    if (req.method !== 'GET') {
+    if (req.method !== 'GET' || !redisClient) {
       return next();
     }
 
@@ -107,15 +129,19 @@ const cacheMiddleware = (duration = 300) => {
         return res.json(JSON.parse(cached));
       }
     } catch (error) {
-      logger.error('Redis error:', error);
+      logger.error('Redis get error:', error.message);
     }
 
     res.sendResponse = res.json;
     res.json = (body) => {
       try {
-        redisClient.setex(key, duration, JSON.stringify(body));
+        if (redisClient) {
+          redisClient.setEx(key, duration, JSON.stringify(body)).catch(err => {
+            logger.error('Redis setEx error:', err.message);
+          });
+        }
       } catch (error) {
-        logger.error('Redis cache error:', error);
+        logger.error('Redis cache error:', error.message);
       }
       res.sendResponse(body);
     };
@@ -370,7 +396,7 @@ app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) =>
 // ===== ROTAS DE LIVROS =====
 
 // Rotas do serviço de livros com cache
-app.get('/api/books', cacheMiddleware(300), async (req, res) => {
+app.get('/api/books', authenticateToken, cacheMiddleware(300), async (req, res) => {
   try {
     const data = await proxyRequest('books', '/books');
     logger.info('Livros obtidos com sucesso');
@@ -381,7 +407,7 @@ app.get('/api/books', cacheMiddleware(300), async (req, res) => {
   }
 });
 
-app.get('/api/books/:id', cacheMiddleware(600), async (req, res) => {
+app.get('/api/books/:id', authenticateToken, cacheMiddleware(600), async (req, res) => {
   try {
     const data = await proxyRequest('books', `/books/${req.params.id}`);
     res.json(data);
