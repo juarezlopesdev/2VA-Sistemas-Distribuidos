@@ -27,8 +27,8 @@ const Login = () => {
       
       if (result.success) {
         toast.success('Login realizado com sucesso!')
-        // Redirecionar para a página de livros após login bem-sucedido
-        navigate('/books')
+        // Redirecionar para a página inicial após login bem-sucedido
+        navigate('/')
       } else {
         // Mensagens de erro específicas
         let errorMsg = ''

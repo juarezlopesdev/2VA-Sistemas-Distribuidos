@@ -9,21 +9,23 @@ import LoadingSpinner from '../components/LoadingSpinner'
 const Home = () => {
   const { isAuthenticated, user } = useAuth()
   
-  // Buscar livros recentes para exibir na home
+  // Buscar livros recentes para exibir na home (somente se autenticado)
   const { data: booksData, isLoading } = useQuery(
     'recent-books',
     () => booksService.getBooks({ limit: 6 }),
     { 
+      enabled: isAuthenticated, // Só executa se estiver autenticado
       staleTime: 5 * 60 * 1000,
       retry: 2
     }
   )
 
-  // Buscar recomendações se disponível
+  // Buscar recomendações se disponível (somente se autenticado)
   const { data: recommendations } = useQuery(
     'recommendations',
     () => booksService.getRecommendations(),
     { 
+      enabled: isAuthenticated, // Só executa se estiver autenticado
       retry: false,
       staleTime: 10 * 60 * 1000
     }

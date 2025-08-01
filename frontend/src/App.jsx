@@ -32,7 +32,7 @@ const PublicRoute = ({ children }) => {
     return <LoadingSpinner />
   }
   
-  return !isAuthenticated ? children : <Navigate to="/books" replace />
+  return !isAuthenticated ? children : <Navigate to="/" replace />
 }
 
 // Componente para proteger rotas administrativas
@@ -48,7 +48,7 @@ const AdminRoute = ({ children }) => {
   }
   
   if (user?.role !== 'admin') {
-    return <Navigate to="/books" />
+    return <Navigate to="/" />
   }
   
   return children
